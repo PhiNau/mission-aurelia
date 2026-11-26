@@ -197,6 +197,16 @@
       const q = V.add(r.o, V.mul(r.d, best.t));
       segments.push({ a: r.o, b: q, I: r.I, main: r.main, n: r.n });
       const nrm = normalAt(best.p, q);
+      if (best.p.mirror) {
+        // Spiegel: Rückseite schluckt das Licht, Vorderseite reflektiert
+        if (best.p.oneSided && V.dot(r.d, nrm) > 0) { events.push({ p: q, nIn: nrm, absorbed: true, main: r.main }); continue; }
+        const nn = V.dot(r.d, nrm) < 0 ? nrm : V.mul(nrm, -1);
+        const cosi = -V.dot(r.d, nn);
+        const refl = V.norm(V.add(r.d, V.mul(nn, 2 * cosi)));
+        events.push({ p: q, nIn: nn, n1: r.n, n2: r.n, inDeg: Math.acos(Math.min(1, cosi)) / DEG, mirror: true, main: r.main, dIn: r.d, dOut: refl });
+        stack.push({ o: q, d: refl, I: r.I, n: r.n, depth: r.depth + 1, main: r.main });
+        continue;
+      }
       const entering = V.dot(r.d, nrm) < 0;
       const n1 = r.n;
       const n2 = entering ? best.body.n : n0;
@@ -237,11 +247,28 @@
     return { x, y: axisY, virtual: t < 0 };
   }
 
+  /* Hohlspiegel (Öffnung nach links), Scheitel bei x=xm */
+  function concaveMirror(xm, cy, R, a) {
+    const c = { x: xm - R, y: cy };
+    const xe = c.x + Math.sqrt(R * R - a * a);
+    return { n: 1, mirror: true, pieces: [{ type: 'arc', c, r: R, sign: 1, mirror: true, valid: (p) => Math.abs(p.y - cy) <= a + 1e-7 && p.x >= c.x }],
+      path: `M${xe} ${cy - a} A${R} ${R} 0 0 1 ${xe} ${cy + a}` };
+  }
+  /* ebener Spiegel von a nach b; front: Punkt auf der spiegelnden Seite */
+  function planeMirror(a, b, front) {
+    const d = V.sub(b, a);
+    let nrm = V.norm({ x: d.y, y: -d.x });
+    const mid = V.mul(V.add(a, b), 0.5);
+    if (front && V.dot(nrm, V.sub(front, mid)) < 0) nrm = V.mul(nrm, -1);
+    // Normale zeigt zur spiegelnden Seite; Treffer von hinten werden geschluckt
+    return { n: 1, mirror: true, pieces: [{ type: 'seg', a, b, nrm, mirror: true, oneSided: !!front }], path: `M${a.x} ${a.y} L${b.x} ${b.y}` };
+  }
+
   function snell(alphaDeg, n1, n2) {
     const s = (n1 / n2) * Math.sin(alphaDeg * DEG);
     if (Math.abs(s) > 1) return null;
     return Math.asin(s) / DEG;
   }
 
-  window.Optics = { V, DEG, polygon, rect, halfCylinder, lens, prismLens, trace, focus, snell, distPointSeg };
+  window.Optics = { V, DEG, polygon, rect, halfCylinder, lens, prismLens, concaveMirror, planeMirror, trace, focus, snell, distPointSeg };
 })();

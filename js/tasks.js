@@ -203,12 +203,12 @@
     const r2 = h('tr', null, h('th', { html: o.head[1] }));
     const inputs = [];
     o.rows.forEach((x, i) => {
-      r1.append(h('td', null, x + '°'));
-      const inp = h('input', { type: 'number', inputmode: 'decimal', step: 'any', class: 'num small', 'aria-label': `${o.head[1]} bei ${x}°` });
+      r1.append(h('td', null, x + (o.unit != null ? ' ' + o.unit : '°')));
+      const inp = h('input', { type: 'number', inputmode: 'decimal', step: 'any', class: 'num small', 'aria-label': `${o.head[1]} bei ${x}${o.unit != null ? ' ' + o.unit : '°'}` });
       if (o.prefill && o.prefill[i] != null) inp.value = o.prefill[i];
       inp.addEventListener('input', () => inp.classList.remove('wrong', 'right'));
       inputs.push(inp);
-      r2.append(h('td', null, inp, h('span', { class: 'deg' }, '°')));
+      r2.append(h('td', null, inp, h('span', { class: 'deg' }, o.unit != null ? ' ' + o.unit : '°')));
     });
     tbl.append(r1, r2);
     const fb = h('div', { class: 'fb-slot' });

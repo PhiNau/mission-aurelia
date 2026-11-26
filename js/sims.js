@@ -39,7 +39,12 @@
       this.gOver = s('g', null, this.root);
       this.gUi = s('g', null, this.svg);
       this.wrap.append(this.svg);
-      container.append(this.wrap);
+      this.wrap.style.setProperty('--ar', (this.w / this.h).toFixed(4));
+      // Simulationen stecken in einem .sim-block (Bühne + Anzeige + Regler),
+      // damit das Layout sie neben den Aufgaben anordnen kann.
+      if (container.classList.contains('sim-block') || opts.noBlock) this.block = container;
+      else { this.block = h('div', { class: 'sim-block' }); container.append(this.block); }
+      this.block.append(this.wrap);
     }
     url(name) { return `url(#${this.id}-${name})`; }
     pt(e) {
@@ -176,8 +181,8 @@
     const cr = crystal(gCrystal, T, 15, '', st);
     const gLaser = s('g', null, st.gOver);
     const info = h('div', { class: 'readout' });
-    container.append(info);
-    const ctr = controls(container);
+    st.block.append(info);
+    const ctr = controls(st.block);
     const sl = UI.slider({ label: 'Richtung des Lasers', min: 3, max: 80, step: 0.1, fine: 0.2, value: ang, format: (v) => fmt(v, 1) + '°', onInput: (v) => { ang = v; render(); } });
     ctr.append(sl.el);
 
@@ -270,8 +275,8 @@
     s('text', { x: LZ.x, y: LZ.y + LZ.r + 20, class: 'lupe-label', 'text-anchor': 'middle', text: 'Lupe (3-fach)' }, gLupe);
 
     const read = h('div', { class: 'readout' });
-    container.append(read);
-    const ctr = controls(container);
+    st.block.append(read);
+    const ctr = controls(st.block);
     let sl = null;
     if (!opts.static) {
       sl = UI.slider({ label: 'Einfallswinkel α einstellen', min: 0, max: 89, step: 1, value: alpha, format: (v) => v + '°', onInput: (v) => { alpha = v; render(); } });
@@ -414,8 +419,8 @@
     const gLaser = s('g', null, st.gOver);
     label(st.gBg, 770, 40, 'Luft', 'lbl-air', 'end');
     const read = h('div', { class: 'readout' });
-    container.append(read);
-    const ctr = controls(container);
+    st.block.append(read);
+    const ctr = controls(st.block);
     const sl = UI.slider({ label: 'Richtung des Lasers', min: -40, max: 70, step: 0.5, value: 0, format: (v) => fmt(v, 1) + '°', onInput: (v) => { ang = v; render(); } });
     ctr.append(sl.el);
     let flipBtn = null;
@@ -545,8 +550,8 @@
     if (opts.labels) label(st.gBg, 790, AX - 10, 'optische Achse', 'lbl-small', 'end');
     let state = {};
     const read = h('div', { class: 'readout' });
-    if (!opts.bare) container.append(read);
-    const ctr = opts.bare ? h('div') : controls(container);
+    if (!opts.bare) st.block.append(read);
+    const ctr = opts.bare ? h('div') : controls(st.block);
     if (opts.kinds) {
       const names = { prisms: 'Prismenstapel', convex: 'Sammellinse', concave: 'Zerstreuungslinse' };
       const seg = UI.segmented(opts.kinds.map((k) => ({ value: k, label: names[k] })), kind, (v) => { kind = v; render(); });
@@ -652,8 +657,8 @@
       label(gMarks, x, AX + 26, 'F', 'lbl-focus', 'middle');
     });
     const read = h('div', { class: 'readout' });
-    container.append(read);
-    const ctr = controls(container);
+    st.block.append(read);
+    const ctr = controls(st.block);
     const slY = UI.slider({ label: 'Höhe des Lasers', min: -150, max: 150, step: 1, value: AX - y, format: (v) => (v > 0 ? '+' : '') + v, onInput: (v) => { y = AX - v; render(); } });
     const slA = UI.slider({ label: 'Neigung des Strahls', min: -40, max: 40, step: 0.5, value: -ang, format: (v) => fmt(v, 1) + '°', onInput: (v) => { ang = -v; render(); } });
     ctr.append(slY.el, slA.el);
@@ -764,12 +769,10 @@
 
   function telescope(container, opts) {
     opts = Object.assign({ tube: 420, kind: 'convex', curv: 8 }, opts);
-    const row = h('div', { class: 'tele-row' });
-    container.append(row);
-    const left = h('div', { class: 'tele-main' });
+    const st = new Stage(container, { w: 800, h: 330, label: 'Fernrohr von der Seite: Sternenlicht fällt durch die Linse' });
+    const left = st.block;
     const right = h('div', { class: 'tele-side' });
-    row.append(left, right);
-    const st = new Stage(left, { w: 800, h: 330, label: 'Fernrohr von der Seite: Sternenlicht fällt durch die Linse' });
+    left.append(right);
     const AX = 165, LX = 105, A = 60, TR = 78;
     const XS = LX + opts.tube;
     let kind = opts.kind;
@@ -793,10 +796,9 @@
     const gMarks = s('g', null, st.gOver);
 
     const ok = h('div', { class: 'okular' });
-    right.append(h('div', { class: 'okular-title' }, 'Blick ins Okular'), ok);
     const view = comet(ok, st.id + '-c');
     const meter = h('div', { class: 'meter' }, h('div', { class: 'meter-bar' }));
-    right.append(h('div', { class: 'meter-label' }, 'Bildschärfe'), meter);
+    right.append(ok, h('div', { class: 'tele-info' }, h('div', { class: 'okular-title' }, 'Blick ins Okular'), h('div', { class: 'meter-label' }, 'Bildschärfe'), meter));
 
     const read = h('div', { class: 'readout' });
     left.append(read);
@@ -927,8 +929,8 @@
     let sl = null;
     if (opts.slider) {
       const read = h('div', { class: 'readout' });
-      container.append(read);
-      const ctr = controls(container);
+      st.block.append(read);
+      const ctr = controls(st.block);
       const upd = () => {
         const b = O.snell(alpha, 1, 1.5);
         read.innerHTML = `<span class="pill pill-alpha">α = ${alpha}°</span> <span class="pill pill-beta">β = ${fmt(b, 0)}°</span>`;

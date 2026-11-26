@@ -130,7 +130,7 @@ main { flex: 1; width: 100%; max-width: 1060px; margin: 0 auto; padding: 1.2rem 
 .dot.seen { opacity: .8; }
 .dot.cur { opacity: 1; height: 14px; margin-top: -2px; box-shadow: 0 0 0 2px #fff; }
 .dot.locked { background: #2a3460; opacity: .5; cursor: not-allowed; }
-.step { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1.2rem 1.4rem 1.6rem; }
+.step { background: var(--paper); border-radius: var(--radius); box-shadow: var(--shadow); padding: 1rem 1.2rem 1.3rem; }
 .step-head { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-bottom: .6rem; }
 .step-head h2 { margin: 0; font-size: 1.35rem; }
 .kind-badge { display: inline-block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: .2rem .6rem; border-radius: 99px; color: #fff; }
@@ -178,7 +178,26 @@ main { flex: 1; width: 100%; max-width: 1060px; margin: 0 auto; padding: 1.2rem 
 .say-prof .who { color: #7a4fd6; }
 
 /* ---------- Bühne / Simulation ---------- */
-.stage-wrap { position: relative; margin: .8rem 0 .4rem; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(10, 17, 36, .25); }
+.stage-wrap { position: relative; width: min(100%, calc(var(--ar, 1.6) * var(--stage-h, 44vh))); margin: .5rem auto .3rem; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 16px rgba(10, 17, 36, .25); }
+.sim-block { min-width: 0; }
+.sim-block:empty { display: none; }
+.sim-block .readout { margin: .15rem 0; font-size: .9rem; }
+.sim-block .controls { padding: .45rem .7rem; gap: .35rem 1rem; margin: .2rem 0 .5rem; }
+.sim-block .slider { flex: 1 1 200px; min-width: 180px; }
+.sim-block .fine { width: 34px; height: 34px; }
+.sim-block .slider input[type=range] { height: 28px; }
+.step-side > :first-child { margin-top: 0; }
+@media (max-width: 899px) and (min-height: 860px) {
+  /* Tablet hochkant: Simulation bleibt oben stehen, Aufgaben scrollen darunter */
+  .step-body.split > .sim-block { position: sticky; top: calc(var(--head-h, 90px) + 2px); z-index: 5; background: var(--paper); --stage-h: 33vh; padding-bottom: .2rem; box-shadow: 0 12px 10px -12px rgba(10, 17, 36, .35); }
+  .step-body.split > .sim-block .controls { margin-bottom: .3rem; }
+}
+@media (min-width: 900px) {
+  .step-body.split { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(290px, 1fr); gap: 1.3rem; align-items: start; }
+  .step-body.split > .sim-block { position: sticky; top: calc(var(--head-h, 56px) + 10px); --stage-h: 58vh; }
+  .step-body.split:has(> .sim-block:empty) { display: block; }
+  .step-body.split > .sim-block .stage-wrap { margin-top: 0; }
+}
 .stage { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
 .stage.interactive { touch-action: none; cursor: crosshair; }
 .stage-bg { fill: #0b1226; }
@@ -341,15 +360,13 @@ select.wrong, input.wrong { border-color: var(--no) !important; background: var(
 .mission-status.done { background: var(--ok-bg); color: var(--ok); }
 
 /* Fernrohr */
-.tele-row { display: grid; grid-template-columns: 1fr 230px; gap: 1rem; align-items: start; }
-.tele-side { background: var(--night-2); border-radius: 14px; padding: .8rem; color: #e8ecff; margin-top: .8rem; text-align: center; }
-.okular-title, .meter-label { font-size: .8rem; text-transform: uppercase; letter-spacing: .07em; color: #9fb0e0; margin-bottom: .4rem; }
+.tele-side { display: grid; grid-template-columns: 92px 1fr; gap: .8rem; align-items: center; background: var(--night-2); border-radius: 12px; padding: .45rem .8rem; color: #e8ecff; margin: .3rem 0; }
+.okular-title, .meter-label { font-size: .75rem; text-transform: uppercase; letter-spacing: .07em; color: #9fb0e0; margin-bottom: .25rem; }
 .okular-svg { width: 100%; max-width: 200px; display: block; margin: 0 auto; }
 .okular.sharp .okular-svg { filter: drop-shadow(0 0 12px rgba(127, 212, 255, .6)); }
 .meter { height: 12px; border-radius: 99px; background: #2a3558; overflow: hidden; }
 .meter-bar { height: 100%; width: 0; background: linear-gradient(90deg, #e0484b, #f5b400); transition: width .2s; }
 .meter.good .meter-bar { background: linear-gradient(90deg, #1f9d55, #7bed9f); }
-.meter-label { margin-top: .8rem; }
 .finale { display: flex; justify-content: center; padding: 1rem; background: radial-gradient(circle, #1b2850, #050a1c); border-radius: 14px; margin-bottom: 1rem; }
 .okular.big { width: min(320px, 80%); }
 .okular.big .okular-svg { max-width: none; }
@@ -394,8 +411,6 @@ select.wrong, input.wrong { border-color: var(--no) !important; background: var(
   .head-mid { order: 3; width: 100%; justify-content: space-between; }
   .team-tag { display: none; }
   .two-col { grid-template-columns: 1fr; }
-  .tele-row { grid-template-columns: 1fr; }
-  .tele-side { display: grid; grid-template-columns: 120px 1fr; gap: .8rem; align-items: center; text-align: left; }
   .step { padding: 1rem .9rem 1.3rem; }
   main { padding: .8rem .6rem 1.5rem; }
 }
@@ -418,3 +433,61 @@ select.wrong, input.wrong { border-color: var(--no) !important; background: var(
   .cert { border-color: #c9a646; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .log-item { break-inside: avoid; }
 }
+
+/* =========================================================
+   Teil 2: optische Bank, Auge, Instrumente
+   ========================================================= */
+.navlink.active { background: rgba(255, 211, 77, .18); color: #ffd98a; }
+@media (max-width: 1150px) { .navlink .long { display: none; } .team-tag { display: none; } }
+.navlink { white-space: nowrap; }
+.part-link { display: block; margin: 1rem 0 0; padding: .8rem 1rem; border-radius: 12px; background: var(--night-3); color: #ffd98a; text-decoration: none; font-weight: 700; text-align: center; border: 1px solid #33417a; }
+.part-link:hover { background: #24356b; }
+.log-part { margin: 1.4rem 0 .2rem; font-size: 1.2rem; color: #5a4310; }
+.axis.faint { opacity: .45; }
+.lbl-focus.small { font-size: 15px; }
+.obj-line { stroke: #ffd34d; stroke-width: 4; stroke-linecap: round; }
+.obj-head { fill: #ffd34d; }
+.obj-line.ant, .obj-line.cell { stroke: #ffb86b; }
+.obj-head.ant, .obj-head.cell { fill: #ffb86b; }
+.obj-line.img-real { stroke: #7bed9f; }
+.obj-head.img-real { fill: #7bed9f; }
+.obj-line.img-virtual { stroke: #7bed9f; stroke-dasharray: 6 5; opacity: .85; }
+.obj-head.img-virtual { fill: none; stroke: #7bed9f; stroke-width: 2; }
+.candle-body { fill: #f3e3c3; stroke: #c9b48a; }
+.candle-wick { stroke: #333; stroke-width: 2; }
+.candle-flame { fill: #ffb000; filter: drop-shadow(0 0 6px #ffcf6b); }
+.con-ray { stroke-width: 2; fill: none; }
+.con-ray.c0 { stroke: #ffd34d; } .con-ray.c1 { stroke: #7bed9f; } .con-ray.c2 { stroke: #4fd1ff; }
+.con-ray.dashed { stroke-dasharray: 6 5; opacity: .8; }
+.screen { fill: #e9ecf8; stroke: #9aa6cc; }
+.screen-spot { stroke: #ffcf6b; stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 4px #ffcf6b); }
+.dim-line.alt { stroke: #9fb0e0; }
+.inset-bg { fill: #050a1c; }
+.inset-bg.retina { fill: #3a1420; }
+.inset-bg.paper { fill: #f3ecd9; }
+.inset-bg.sky { fill: #8fc8f2; }
+.inset-bg.paper + g + .inset-frame, .inset-bg.sky + g + .inset-frame { stroke: #ffd34d; }
+.inset-frame { fill: none; stroke: #ffd34d; stroke-width: 2; }
+.inset-title { fill: #ffd34d; font-size: 12px; font-weight: 700; }
+.eye-sclera { fill: rgba(220, 235, 255, .08); stroke: #e8ecff; stroke-width: 3; }
+.eye-cornea { fill: rgba(160, 220, 255, .18); stroke: #8fdcff; stroke-width: 3; }
+.eye-retina { fill: none; stroke: #ff7a8a; stroke-width: 6; stroke-linecap: round; }
+.eye-nerve { fill: #f2c38b; stroke: #c98d4b; }
+.eye-irisline { stroke: #4fa3ff; stroke-width: 7; stroke-linecap: round; }
+.eye-lens { fill: rgba(160, 220, 255, .35); stroke: #8fdcff; stroke-width: 2.5; }
+.eye-muscle { fill: #ff9f9f; stroke: #c85a5a; }
+.eye-icon .eye-white { fill: #f4f6ff; stroke: #9aa6cc; }
+.eye-icon .eye-iris { fill: #4fa3ff; }
+.eye-icon .eye-pupil { fill: #0b1226; }
+.lens.glasses { stroke: #ffd34d; }
+.glasses-frame { fill: none; stroke: #ffd34d; stroke-width: 3; stroke-linecap: round; opacity: .8; }
+.book { fill: #ff9f43; stroke: #fff; stroke-width: 1.5; }
+.mirror { fill: none; stroke: #e6e9ff; stroke-width: 5; stroke-linecap: round; }
+.mirror.small { stroke-width: 4; }
+.mirror-back { fill: none; stroke: #6b7bb8; stroke-width: 6; stroke-dasharray: 3 4; }
+.scope-tube { fill: rgba(58, 70, 112, .35); stroke: #6b7bb8; stroke-width: 1.5; }
+.scope-tube.faint { fill: none; stroke-dasharray: 8 6; }
+.ray-glow.alt line { stroke: #1f7bff; }
+.ray-core.alt line { stroke: #cfe3ff; }
+.ray-core.alt .ray-arrow { fill: #e6f0ff; }
+.mission-slot:empty { display: none; }

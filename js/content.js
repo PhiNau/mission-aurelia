@@ -93,6 +93,28 @@
   /* =========================================================
      STATIONEN
      ========================================================= */
+  function teamStep(el, api) {
+    if (api.team) {
+      el.append(D([{ who: 'lumi', text: `Ich kenne euch schon: <b>${api.teamHtml}</b>! Ihr könnt den Namen hier noch ändern.` }]));
+    } else {
+      el.append(D([{ who: 'lumi', text: 'Wie heißt euer Team? Ich speichere den Namen – aber nur hier auf diesem Gerät.' }]));
+    }
+    const card = T.card(el, 'Teamname');
+    const input = h('input', { type: 'text', class: 'text-in', maxlength: 30, placeholder: 'z. B. Die Lichtblitze', value: api.team || '', 'aria-label': 'Teamname' });
+    const fb = h('div', { class: 'fb-slot' });
+    const go = UI.btn('Speichern', () => {
+      const v = input.value.trim();
+      fb.innerHTML = '';
+      if (v.length < 2) { fb.append(UI.feedback('info', 'Bitte gebt einen Namen mit mindestens 2 Zeichen ein.')); return; }
+      api.setTeam(v);
+      fb.append(UI.feedback('ok', `Willkommen im Forschungsteam, <b>${UI.esc(v)}</b>! Piep-piep!`));
+      api.done();
+    }, 'btn-primary');
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go.click(); });
+    card.append(h('div', { class: 'num-row' }, input, go), fb);
+    if (api.team) api.done();
+  }
+
   const STATIONS = [];
 
   /* ---------- PROLOG ---------- */
@@ -115,22 +137,7 @@
           { who: 'lumi', text: 'Mit allen 8 Kristallen ist mein Speicher wieder voll und ich kann die neue Linse schleifen. Dann sehen wir Aurelia gestochen scharf!' },
         ]));
       } },
-      { kind: 'task', title: 'Euer Forschungsteam', gate: true, render(el, api) {
-        el.append(D([{ who: 'lumi', text: 'Wie heißt euer Team? Ich speichere den Namen – aber nur hier auf diesem Gerät.' }]));
-        const card = T.card(el, 'Teamname');
-        const input = h('input', { type: 'text', class: 'text-in', maxlength: 30, placeholder: 'z. B. Die Lichtblitze', value: api.team || '', 'aria-label': 'Teamname' });
-        const fb = h('div', { class: 'fb-slot' });
-        const go = UI.btn('Speichern', () => {
-          const v = input.value.trim();
-          fb.innerHTML = '';
-          if (v.length < 2) { fb.append(UI.feedback('info', 'Bitte gebt einen Namen mit mindestens 2 Zeichen ein.')); return; }
-          api.setTeam(v);
-          fb.append(UI.feedback('ok', `Willkommen im Forschungsteam, <b>${UI.esc(v)}</b>! Piep-piep!`));
-          api.done();
-        }, 'btn-primary');
-        input.addEventListener('keydown', (e) => { if (e.key === 'Enter') go.click(); });
-        card.append(h('div', { class: 'num-row' }, input, go), fb);
-      } },
+      { kind: 'task', title: 'Euer Forschungsteam', gate: true, render: teamStep },
       { kind: 'info', title: 'So funktioniert der Lernpfad', render(el, api) {
         el.append(P(`<p>Jede Station besteht aus mehreren Schritten. Ihr erkennt sie an diesen Zeichen:</p>`));
         el.append(h('div', { class: 'legend-grid', html: `
@@ -337,7 +344,7 @@
         const m = api.get('messung');
         const b40 = m && !isNaN(m[2]) ? Math.round(m[2]) : 25;
         el.append(D([{ who: 'prof', text: `Erinnert ihr euch an euer Messlabor? Licht aus der Luft mit <b>α = 40°</b> lief im Glas mit <b>β ≈ ${b40}°</b> weiter.` }]));
-        const slot = h('div');
+        const slot = h('div', { class: 'sim-block' });
         T.numeric(el, { q: `Jetzt läuft das Licht genau <b>andersherum</b>: Es trifft im Glas mit <b>${b40}°</b> auf die Grenzfläche. Unter welchem Winkel zum Lot tritt es in die Luft aus? Vermutet!`, answer: 40, tol: 3, unit: '°',
           solved: api.solved, hint: 'Stellt euch vor, ihr spult einen Film rückwärts ab. Das Licht nimmt denselben Weg – nur in die andere Richtung.',
           fbHigh: 'Zu groß. Denkt an euer Messlabor: Welcher Winkel in der Luft gehörte zu diesem Winkel im Glas?',
@@ -620,7 +627,7 @@
           { who: 'prof', text: 'Oh nein! Beim Einbau merken wir: Der Sturm hat das lange Rohr verbogen. Wir haben nur noch ein <b>kurzes Ersatzrohr</b>: 26 cm.' },
           { who: 'lumi', text: 'Kein Problem – ich schleife eine zweite Linse. Aber wie muss sie aussehen?' },
         ]));
-        const slot = h('div');
+        const slot = h('div', { class: 'sim-block' });
         T.mc(el, { q: 'Was muss LUMI an der Linse ändern?', solved: api.solved, onSolved: () => { show(); }, options: [
           { t: 'Sie muss stärker gewölbt sein (kürzere Brennweite).', ok: true, fb: 'Das Rohr ist kürzer – also muss sich das Licht früher treffen.' },
           { t: 'Sie muss flacher sein (längere Brennweite).', fb: 'Dann würde sich das Licht noch später treffen – weit hinter dem kurzen Rohr.' },
@@ -653,5 +660,5 @@
     ],
   });
 
-  window.CONTENT = { STATIONS };
+  window.CONTENT = { STATIONS, teamStep };
 })();
