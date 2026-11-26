@@ -78,6 +78,19 @@
           { who: 'lumi', text: 'Eine Kamera ist innen ein dunkler Kasten. Vorne sitzt eine Sammellinse, hinten der Bildsensor. Wir bauen das nach: mit einer <b>Kerze</b>, einer <b>Sammellinse</b> (f = 10 cm) und einem <b>Schirm</b>.' },
         ]));
       } },
+      { kind: 'learn', title: 'Erkunden: Kerze, Linse, Schirm', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Zieht die <b>Kerze</b> und den <b>Schirm</b> an ihren Griffen oder benutzt die Regler. Oben links seht ihr, was auf dem Schirm erscheint.</p>',
+          sim: (e, cb) => B.imaging(e, { g: 300, xs: 560, onChange: cb }),
+          items: [
+            { t: 'Stellt die Kerze <b>weit weg</b> (mehr als 25 cm) und sucht mit dem Schirm das scharfe Bild.', check: (st) => st.sharp && st.g > 25, fb: 'Das Bild ist <b>kleiner</b> als die Kerze und steht <b>auf dem Kopf</b>. Der Schirm steht nah an der Linse.' },
+            { t: 'Schiebt die Kerze <b>näher heran</b> (etwa 14 bis 15 cm) und stellt wieder scharf.', check: (st) => st.sharp && st.g >= 13.5 && st.g <= 15.5, fb: 'Jetzt ist das Bild <b>größer</b> als die Kerze – und der Schirm muss weiter weg.' },
+            { t: 'Schiebt die Kerze <b>näher als 10 cm</b> an die Linse (das ist die Brennweite).', check: (st) => st.g < 10, fb: 'Es gibt kein Bild mehr auf dem Schirm – egal, wo der Schirm steht.' },
+            { t: 'Schaltet die <b>Konstruktion mit besonderen Strahlen</b> ein.', check: (st) => st.construct, fb: 'Die drei besonderen Strahlen von der Flammenspitze treffen sich genau dort, wo das scharfe Bild entsteht.' },
+          ],
+          summary: 'Steht die Kerze weiter weg als die Brennweite, entsteht hinter der Linse ein <b>umgekehrtes Bild</b>, das man auf einem Schirm auffangen kann. Je näher die Kerze an die Brennweite heranrückt, desto <b>größer</b> wird das Bild und desto <b>weiter weg</b> liegt es. Innerhalb der Brennweite entsteht kein Bild auf dem Schirm.',
+        });
+      } },
       { kind: 'exp', title: 'Fangt das Bild ein!', gate: true, render(el, api) {
         goal(el, api, {
           text: '<p><b>Auftrag:</b> Verschiebt den <b>Schirm</b>, bis das Bild der Kerze darauf <b>scharf</b> ist. Ihr könnt Kerze und Schirm auch direkt ziehen. Oben links seht ihr, was auf dem Schirm zu sehen ist.</p>',
@@ -156,23 +169,26 @@
             { zone: 'glas', text: 'Glaskörper' }, { zone: 'netz', text: 'Netzhaut' }, { zone: 'nerv', text: 'Sehnerv' },
           ] });
       } },
-      { kind: 'exp', title: 'Nah und fern scharf sehen', gate: true, render(el, api) {
-        let far = false, near = false;
-        goal(el, api, {
-          text: '<p><b>Auftrag:</b> Stellt mit dem Ziliarmuskel die Augenlinse so ein, dass der <b>Baum</b> scharf auf der Netzhaut abgebildet wird. Wechselt dann zum <b>Buch</b> und stellt wieder scharf.</p>',
-          statusText: 'Baum scharf? Buch scharf?',
+      { kind: 'learn', title: 'Erkunden: Nah und fern scharf sehen', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Mit dem <b>Ziliarmuskel</b> könnt ihr die Augenlinse wölben. Wechselt zwischen Baum und Buch und beobachtet das Bild auf der Netzhaut (oben links).</p>',
           sim: (e, cb) => B.eye(e, { mode: 'manual', object: 'far', onChange: cb }),
-          check: (st) => { if (st.sharp && st.object === 'far') far = true; if (st.sharp && st.object === 'near') near = true; return far && near; },
-          success: '<b>Beides scharf!</b> Vergleicht, wie die Linse beim Baum und beim Buch aussah.',
-          questions: [{ q: 'Wie muss die Augenlinse für <b>nahe</b> Gegenstände eingestellt sein?', options: [
-            { t: 'Stärker gewölbt', ok: true, fb: 'Eine stärker gewölbte Linse hat eine kürzere Brennweite. Das nennt man <b>Akkommodation</b>.' },
-            { t: 'Flacher', fb: 'Flach (entspannt) ist die Linse beim Blick in die Ferne.' },
-            { t: 'Das spielt keine Rolle.', fb: 'Probiert es aus: Beim Buch ist die entspannte Linse unscharf.' },
-          ] }],
+          items: [
+            { t: 'Schaut den <b>Baum</b> mit <b>entspannter</b> Linse an. Ist das Netzhautbild scharf?', check: (st) => st.object === 'far' && st.sharp && st.curv < 10, fb: 'Ja: Für ferne Dinge ist die Augenlinse entspannt und flach.' },
+            { t: 'Wechselt zum <b>Buch</b>, ohne die Linse zu verändern.', check: (st) => st.object === 'near' && !st.sharp, fb: 'Unscharf! Die Strahlen vom nahen Buch würden sich erst hinter der Netzhaut treffen.' },
+            { t: '<b>Wölbt die Linse</b>, bis das Buch scharf ist.', check: (st) => st.object === 'near' && st.sharp, fb: 'Die stärker gewölbte Linse bricht stärker – das Bild liegt wieder auf der Netzhaut. Das nennt man <b>Akkommodation</b>.' },
+            { t: 'Schaut euch das Bild auf der Netzhaut genau an: Wie steht es?', fb: 'Auf dem Kopf! Das Gehirn dreht es für uns richtig herum.' },
+          ],
+          summary: 'Hornhaut und Augenlinse erzeugen auf der Netzhaut ein <b>umgekehrtes</b> Bild. Für <b>nahe</b> Gegenstände wölbt der Ziliarmuskel die Linse <b>stärker</b> (Akkommodation), für ferne ist sie flach.',
         });
       } },
       { kind: 'task', title: 'Kurzer Check', gate: true, render(el, api) {
-        const need = api.need(2);
+        const need = api.need(3);
+        T.mc(el, { q: 'Wie muss die Augenlinse für <b>nahe</b> Gegenstände eingestellt sein?', solved: api.solved, onSolved: need, options: [
+          { t: 'Stärker gewölbt', ok: true, fb: 'Eine stärker gewölbte Linse hat eine kürzere Brennweite. Das nennt man <b>Akkommodation</b>.' },
+          { t: 'Flacher', fb: 'Flach (entspannt) ist die Linse beim Blick in die Ferne.' },
+          { t: 'Das spielt keine Rolle.', fb: 'Erinnert euch an das Buch: Mit entspannter Linse war es unscharf.' },
+        ] });
         T.mc(el, { q: 'Wie steht das Bild auf der Netzhaut?', solved: api.solved, onSolved: need, options: [
           { t: 'Auf dem Kopf – das Gehirn dreht es um.', ok: true, fb: 'Genau wie beim Schirmbild der Kerze. Das Gehirn hat gelernt, das Bild richtig herum zu deuten.' },
           { t: 'Aufrecht', fb: 'Schaut euch das Bild oben links in der Simulation an.' },
@@ -198,6 +214,20 @@
           { who: 'prof', text: 'Seine Oma Erika sagt genau das Gegenteil: <i>„Die Zeitung muss ich ganz weit weghalten, sonst ist alles unscharf.“</i>' },
           { who: 'lumi', text: 'Ich habe Modelle von beiden Augen gebaut. Findet die passende Brille! Das Auge stellt dabei selbst so gut scharf, wie es kann.' },
         ]));
+      } },
+      { kind: 'learn', title: 'Erkunden: Drei Augen im Vergleich', gate: true, render(el, api) {
+        let nf = false, nn = false;
+        T.learn(el, api, {
+          intro: '<p>LUMI hat drei Augenmodelle gebaut: ein <b>normalsichtiges</b>, ein <b>kurzsichtiges</b> und ein <b>weitsichtiges</b> Auge. Die Augen stellen selbst so gut scharf, wie sie können. Vergleicht!</p>',
+          sim: (e, cb) => B.eye(e, { mode: 'auto', type: 'normal', object: 'far', types: true, onChange: cb }),
+          items: [
+            { t: '<b>Normalsichtiges</b> Auge: Prüft Baum <b>und</b> Buch.', check: (st) => { if (st.type === 'normal' && st.sharp) { if (st.object === 'far') nf = true; else nn = true; } return nf && nn; }, fb: 'Ein gesundes Auge sieht nah und fern scharf – die Linse passt sich an.' },
+            { t: '<b>Kurzsichtiges</b> Auge: Schaut den <b>Baum</b> an. Wo läge das scharfe Bild?', check: (st) => st.type === 'kurz' && st.object === 'far' && !st.sharp, fb: 'Unscharf – das Bild liegt <b>vor</b> der Netzhaut, weil der Augapfel zu lang ist.' },
+            { t: '<b>Kurzsichtiges</b> Auge: Schaut das <b>Buch</b> an.', check: (st) => st.type === 'kurz' && st.object === 'near' && st.sharp, fb: 'Scharf! Kurzsichtige sehen in der Nähe gut – daher der Name.' },
+            { t: '<b>Weitsichtiges</b> Auge: Schaut das <b>Buch</b> an.', check: (st) => st.type === 'weit' && st.object === 'near' && !st.sharp, fb: 'Unscharf – das Bild läge <b>hinter</b> der Netzhaut.' },
+          ],
+          summary: '<b>Kurzsichtig:</b> In der Ferne unscharf, das Bild liegt vor der Netzhaut. <b>Weitsichtig:</b> In der Nähe unscharf, das Bild liegt hinter der Netzhaut.',
+        });
       } },
       { kind: 'exp', title: 'Jonas ist kurzsichtig', gate: true, render(el, api) {
         goal(el, api, {
@@ -261,6 +291,19 @@
           { who: 'lumi', text: 'Dafür nehmen wir eine Lupe – eine Sammellinse mit f = 16 cm. Erinnert ihr euch an die Kerze ganz nah an der Linse? Da gab es kein Bild auf dem Schirm. Aber vielleicht im Auge …' },
         ]));
       } },
+      { kind: 'learn', title: 'Erkunden: Was macht die Lupe?', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Zieht die <b>Ameise</b> an ihrem Griff oder benutzt den Regler. Oben links seht ihr, was Mias Auge sieht. Die Lupe hat die Brennweite f = 16 cm.</p>',
+          sim: (e, cb) => B.magnifier(e, { g: 240, onChange: cb }),
+          items: [
+            { t: 'Lasst die Ameise <b>weiter weg</b> als 16 cm. Wo treffen sich die Strahlen?', check: (st) => st.g > 16.3, fb: 'Hinter der Lupe treffen sich die Strahlen: Es entsteht ein <b>umgekehrtes</b> Bild – zum Vergrößern ungeeignet.' },
+            { t: 'Schiebt die Ameise <b>ganz nah</b> an die Lupe (unter 5 cm).', check: (st) => st.g < 5, fb: 'Die Ameise erscheint nur ein wenig größer – aber aufrecht.' },
+            { t: 'Schiebt die Ameise <b>knapp innerhalb der Brennweite</b> (zwischen 12 und 16 cm).', check: (st) => st.virtual && st.g >= 12, fb: 'Jetzt ist die Vergrößerung riesig! Die gestrichelten Linien treffen sich weit links.' },
+            { t: 'Folgt den <b>gestrichelten Linien</b>: Wo „sieht“ das Auge die Ameise?', fb: 'Dort, wo sich die Rückverlängerungen treffen – ein großes, aufrechtes, <b>scheinbares</b> Bild.' },
+          ],
+          summary: 'Liegt der Gegenstand <b>innerhalb der Brennweite</b>, laufen die Strahlen hinter der Lupe auseinander. Das Auge sieht ein <b>vergrößertes, aufrechtes, scheinbares</b> Bild – je näher am Brennpunkt, desto größer.',
+        });
+      } },
       { kind: 'exp', title: 'Die Ameise vergrößern', gate: true, render(el, api) {
         goal(el, api, {
           text: '<p><b>Auftrag:</b> Verschiebt die Ameise, bis Mia sie <b>mindestens 3-mal so groß</b> und aufrecht sieht. Gestrichelt: die Rückverlängerungen der Strahlen.</p>',
@@ -300,6 +343,18 @@
           { who: 'prof', text: 'Herr Okonkwo vom Segelclub möchte vom Ufer aus einen weit entfernten Leuchtturm genau sehen.' },
           { who: 'lumi', text: 'Unser Aurelia-Fernrohr hatte nur <b>eine</b> Linse. Das Bild war scharf, aber klein. Mit einer <b>zweiten</b> Linse als Lupe dahinter können wir es vergrößern!' },
         ]));
+      } },
+      { kind: 'learn', title: 'Erkunden: Zwei Linsen hintereinander', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Vorne sitzt das <b>Objektiv</b> (f₁ = 40 cm), dahinter das <b>Okular</b> (f₂ = 10 cm). Verschiebt das Okular und beobachtet den Turm im Okular.</p>',
+          sim: (e, cb) => B.twoLensScope(e, { f1: 400, f2: 100, d: 300, types: true, onChange: cb }),
+          items: [
+            { t: 'Verschiebt das Okular <b>weiter weg</b> vom Objektiv (über 40 cm).', check: (st) => st.d > 40, fb: 'Das Bild wird mal schärfer, mal unschärfer – nur ein bestimmter Abstand passt.' },
+            { t: 'Findet den Abstand, bei dem der Turm <b>scharf</b> ist. Achtet auf F₁ und F₂.', check: (st) => st.sharp && st.f2 > 0, fb: 'Scharf, wenn die Brennpunkte <b>F₁ und F₂ zusammenfallen</b>. Der Turm erscheint größer – aber auf dem Kopf.' },
+            { t: 'Wechselt zum <b>Galilei-Okular</b> (Zerstreuungslinse) und stellt wieder scharf.', check: (st) => st.sharp && st.f2 < 0, fb: 'Auch scharf – das Bild steht jetzt <b>aufrecht</b> und das Fernrohr ist kürzer.' },
+          ],
+          summary: 'Ein Fernrohr aus zwei Linsen ist scharf, wenn die <b>Brennpunkte von Objektiv und Okular zusammenfallen</b>. Das Okular wirkt dabei wie eine Lupe für das Zwischenbild des Objektivs.',
+        });
       } },
       { kind: 'exp', title: 'Das Kepler-Fernrohr', gate: true, render(el, api) {
         goal(el, api, {
@@ -353,6 +408,18 @@
           { who: 'lumi', text: 'Beim Fernrohr ist der Gegenstand sehr weit weg. Beim Mikroskop liegt er ganz nah vor dem Objektiv. Deshalb ist das Objektiv hier eine sehr starke Linse mit kurzer Brennweite.' },
         ]));
       } },
+      { kind: 'learn', title: 'Erkunden: Objekt und Zwischenbild', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Dreht am <b>Triebrad</b> (Regler) und beobachtet, wo das <b>Zwischenbild</b> entsteht und wie die Zellen im Mikroskop aussehen.</p>',
+          sim: (e, cb) => B.microscope(e, { g: 85, onChange: cb }),
+          items: [
+            { t: 'Dreht das Objekt <b>weiter weg</b> vom Objektiv (über 10 mm).', check: (st) => st.g > 100, fb: 'Das Zwischenbild wird kleiner und rückt näher an das Objektiv.' },
+            { t: 'Dreht das Objekt <b>näher heran</b> (unter 6 mm).', check: (st) => st.g < 60, fb: 'Das Zwischenbild wird größer und wandert hinter das Okular – unscharf.' },
+            { t: 'Findet die Stellung, bei der die Zellen <b>scharf</b> sind.', check: (st) => st.sharp, fb: 'Scharf ist es, wenn das Zwischenbild knapp vor dem Okular liegt – dort wirkt das Okular wie eine Lupe.' },
+          ],
+          summary: 'Das <b>Objektiv</b> erzeugt ein vergrößertes, umgekehrtes <b>Zwischenbild</b>. Das <b>Okular</b> vergrößert es wie eine Lupe noch einmal – dafür muss das Zwischenbild knapp innerhalb seiner Brennweite liegen.',
+        });
+      } },
       { kind: 'exp', title: 'Scharfstellen', gate: true, render(el, api) {
         goal(el, api, {
           text: '<p><b>Auftrag:</b> Dreht am Triebrad, bis die Zellen im Mikroskop <b>scharf</b> zu sehen sind. Beobachtet dabei das <b>Zwischenbild</b>.</p>',
@@ -402,6 +469,18 @@
           { who: 'prof', text: 'Wusstet ihr, dass die größten Teleskope der Welt gar keine große Linse haben? Ihr Herz ist ein <b>Spiegel</b> mit bis zu 39 m Durchmesser!' },
           { who: 'lumi', text: 'Und Frau Berger vom Vogelschutzverein hat ein Fernglas dabei. Sie fragt: <i>„Warum ist mein Fernglas so kurz und das Bild trotzdem aufrecht?“</i>' },
         ]));
+      } },
+      { kind: 'learn', title: 'Erkunden: Spiegel und Prismen', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Schaltet zwischen den drei Bauteilen um und verfolgt die Lichtstrahlen.</p>',
+          sim: (e, cb) => B.mirrors(e, { mode: 'hohl', onChange: cb }),
+          items: [
+            { t: '<b>Hohlspiegel:</b> Wo treffen sich die zurückgeworfenen Strahlen?', check: (st) => st.mode === 'hohl', fb: 'In einem Punkt: dem Brennpunkt F des Spiegels.' },
+            { t: '<b>Spiegelteleskop:</b> Wie kommt das Licht zum Okular?', check: (st) => st.mode === 'newton', fb: 'Ein kleiner, schräger Spiegel lenkt das gesammelte Licht zur Seite aus dem Rohr.' },
+            { t: '<b>Umlenkprisma:</b> Wo kommt der rote Strahl wieder heraus?', check: (st) => st.mode === 'porro', fb: 'Unten! Oben und unten werden vertauscht – das Licht läuft zurück.' },
+          ],
+          summary: 'Ein <b>Hohlspiegel</b> sammelt Licht wie eine Sammellinse. Ein <b>Umlenkprisma</b> lenkt Licht durch Totalreflexion um und vertauscht oben und unten.',
+        });
       } },
       { kind: 'exp', title: 'Der Hohlspiegel', gate: true, render(el, api) {
         el.append(P('<p><b>Auftrag:</b> Beobachtet, was der gewölbte Spiegel mit parallelem Licht macht.</p>'));

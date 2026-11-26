@@ -118,21 +118,44 @@
     return h('button', { type: 'button', class: 'btn ' + (cls || ''), onclick: onClick, html: label });
   }
 
-  /* Schieberegler mit Label und Feineinstellung */
+  /* Nächster Bildschirm-Frame (mit Rückfallebene, falls der Browser keine Frames liefert) */
+  function nextFrame(fn) {
+    let done = false;
+    const run = () => { if (!done) { done = true; fn(); } };
+    requestAnimationFrame(run);
+    setTimeout(run, 50);
+  }
+
+  /* Schieberegler mit Label und Feineinstellung.
+     − / + springen immer zuerst auf den nächsten „glatten“ Wert (z. B. 1,5 → 2 → 3).
+     Änderungen werden pro Bildschirm-Frame gebündelt (flüssiger auf Tablets). */
   function slider(opts) {
     const { label, min, max, step, value, onInput, format, fine } = opts;
     const out = h('output', { class: 'slider-out' });
     const input = h('input', { type: 'range', min, max, step: step || 1, value, 'aria-label': label.replace(/<[^>]+>/g, '') });
-    const set = (v, fire) => {
-      v = Math.max(min, Math.min(max, v));
-      input.value = v;
-      out.innerHTML = format ? format(Number(input.value)) : input.value;
-      if (fire !== false && onInput) onInput(Number(input.value));
+    let frame = false;
+    const fire = () => {
+      if (frame) return;
+      frame = true;
+      nextFrame(() => { frame = false; if (onInput) onInput(Number(input.value)); });
     };
-    input.addEventListener('input', () => set(Number(input.value)));
+    const show = () => { out.innerHTML = format ? format(Number(input.value)) : input.value; };
+    const set = (v, doFire) => {
+      v = Math.max(Number(input.min), Math.min(Number(input.max), v));
+      input.value = v;
+      show();
+      if (doFire !== false) fire();
+    };
+    input.addEventListener('input', () => { show(); fire(); });
     const f = fine || step || 1;
-    const minus = h('button', { type: 'button', class: 'fine', 'aria-label': 'weniger', onclick: () => set(Number(input.value) - f) }, '−');
-    const plus = h('button', { type: 'button', class: 'fine', 'aria-label': 'mehr', onclick: () => set(Number(input.value) + f) }, '+');
+    const snap = (dir) => {
+      const v = Number(input.value);
+      const k = v / f;
+      const n = dir > 0 ? Math.floor(k + 1e-6) + 1 : Math.ceil(k - 1e-6) - 1;
+      set(Number((n * f).toFixed(6)));
+    };
+    const minus = h('button', { type: 'button', class: 'fine', 'aria-label': 'weniger', onclick: () => snap(-1) }, '−');
+    const plus = h('button', { type: 'button', class: 'fine', 'aria-label': 'mehr', onclick: () => snap(1) }, '+');
     const el = h('div', { class: 'slider' }, h('label', { html: label }), h('div', { class: 'slider-row' }, minus, input, plus), out);
     set(value, false);
     return { el, set, get: () => Number(input.value), input };
@@ -168,5 +191,5 @@
     return a;
   }
 
-  window.UI = { h, s, append, esc, fmt, avatar, dialog, feedback, box, btn, slider, segmented, toggle, shuffle, NS };
+  window.UI = { nextFrame, h, s, append, esc, fmt, avatar, dialog, feedback, box, btn, slider, segmented, toggle, shuffle, NS };
 })();

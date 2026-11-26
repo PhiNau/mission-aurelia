@@ -268,5 +268,57 @@
     return el;
   }
 
-  window.Tasks = { mc, cloze, numeric, labeling, table, predict, card };
+  /* ---------- Lernabschnitt: Forscheraufträge ----------
+     items: [{ t: Auftrag, check(state) (optional, sonst Knopf „Beobachtet“), fb: Erklärung }] */
+  function explore(container, o) {
+    const el = card(container, o.title || '🔍 Forscheraufträge');
+    const prog = h('div', { class: 'explore-prog' });
+    const list = h('ol', { class: 'explore' });
+    const sum = h('div', { class: 'fb-slot' });
+    const done = o.items.map(() => false);
+    let finished = false;
+    const rows = o.items.map((it, i) => {
+      const icon = h('span', { class: 'ex-icon', 'aria-hidden': 'true' }, String(i + 1));
+      const btn = it.check ? null : UI.btn('Beobachtet ✓', () => mark(i), 'btn-small');
+      const li = h('li', { class: 'explore-item' + (it.check ? ' auto' : '') }, icon,
+        h('div', { class: 'ex-body' }, h('div', { class: 'ex-t', html: it.t }), btn, h('div', { class: 'ex-fb', html: '💡 ' + it.fb })));
+      list.append(li);
+      return { li, btn, icon };
+    });
+    function mark(i) {
+      if (done[i]) return;
+      done[i] = true;
+      rows[i].li.classList.add('found');
+      rows[i].icon.textContent = '✓';
+      if (rows[i].btn) rows[i].btn.remove();
+      upd();
+    }
+    function upd() {
+      const n = done.filter(Boolean).length;
+      prog.innerHTML = `<b>${n} von ${done.length}</b> entdeckt` + (n < done.length ? ' – probiert es in der Simulation aus!' : '');
+      prog.classList.toggle('complete', n === done.length);
+      if (n === done.length && !finished) {
+        finished = true;
+        if (o.summary) sum.append(UI.box('learn', '📘 Das habt ihr herausgefunden', o.summary));
+        o.onDone && o.onDone();
+      }
+    }
+    el.append(prog, list, sum);
+    if (o.solved) o.items.forEach((_, i) => mark(i));
+    upd();
+    return { update(st) { if (!st) return; o.items.forEach((it, i) => { if (!done[i] && it.check && it.check(st)) mark(i); }); } };
+  }
+
+  /* Lernabschnitt = Einführung + Simulation + Forscheraufträge + Zusammenfassung */
+  function learn(el, api, o) {
+    if (o.intro) el.append(h('div', { class: 'prose', html: o.intro }));
+    let ex = null, last = null;
+    const sim = o.sim(el, (st) => { last = st; if (ex) ex.update(st); });
+    ex = explore(el, { items: o.items, summary: o.summary, solved: api.solved, onDone: api.done });
+    ex.update(last || (sim && sim.state));
+    if (o.after) o.after(el);
+    return sim;
+  }
+
+  window.Tasks = { mc, cloze, numeric, labeling, table, predict, card, explore, learn };
 })();

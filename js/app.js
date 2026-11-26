@@ -7,7 +7,7 @@
   const { h, esc } = UI;
   const STATIONS = CONTENT.STATIONS;
   const KEY = 'mission-aurelia-v1';
-  const KIND = { story: ['Geschichte', 'k-story'], info: ['Wissen', 'k-info'], exp: ['Experiment', 'k-exp'], task: ['Aufgabe', 'k-task'] };
+  const KIND = { story: ['Geschichte', 'k-story'], learn: ['Lernabschnitt', 'k-learn'], info: ['Wissen', 'k-info'], exp: ['Experiment', 'k-exp'], task: ['Aufgabe', 'k-task'] };
 
   /* ---------- Symbole ---------- */
   function crystalSvg(color, cls) {
@@ -220,7 +220,7 @@
     let solved = !step.gate || !!prog.steps[key] || prog.all;
     function setGate() {
       next.disabled = !solved;
-      hint.textContent = solved ? '' : (step.kind === 'exp' ? 'Erledigt zuerst den Auftrag.' : 'Löst zuerst die Aufgabe.');
+      hint.textContent = solved ? '' : (step.kind === 'learn' ? 'Erledigt zuerst die Forscheraufträge.' : step.kind === 'exp' ? 'Erledigt zuerst den Auftrag.' : 'Löst zuerst die Aufgabe.');
     }
     const api = {
       solved: !!prog.steps[key],

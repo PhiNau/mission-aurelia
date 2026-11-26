@@ -201,6 +201,7 @@
       gObj.innerHTML = ''; gCon.innerHTML = ''; gScreen.innerHTML = ''; gDim.innerHTML = '';
       st.gRay.innerHTML = '';
       candle(gObj, tip.x, AX, H);
+      s('rect', { x: tip.x - 28, y: AX - H - 20, width: 56, height: H + 40, rx: 10, class: 'drag-handle hit grip', 'data-h': 'g' }, gObj);
       // Lichtbündel von der Flammenspitze
       const segs = [], ys = [];
       for (let k = 0; k < 7; k++) {
@@ -213,6 +214,7 @@
       const spot = ys.length === 7 ? Math.max(...ys) - Math.min(...ys) : 999;
       // Schirm
       s('rect', { x: XS, y: AX - 170, width: 8, height: 340, rx: 2, class: 'screen' }, gScreen);
+      s('rect', { x: XS - 22, y: AX - 170, width: 52, height: 340, rx: 10, class: 'drag-handle hit grip', 'data-h': 's' }, gScreen);
       if (ys.length) s('line', { x1: XS - 1, y1: Math.min(...ys), x2: XS - 1, y2: Math.max(...ys), class: 'screen-spot' }, gScreen);
       label(gScreen, XS + 4, AX + 190, 'Schirm', 'lbl-small', 'middle');
       // Bild
@@ -256,17 +258,11 @@
       else if (sharp) txt += ` <b class="ok">Scharfes Bild!</b> ${m > 1.05 ? 'vergrößert' : m < 0.95 ? 'verkleinert' : 'gleich groß'}, umgekehrt`;
       else txt += ' <span class="dim">unscharf</span>';
       read.innerHTML = txt;
-      state = { g: g / 10, b: (XS - LX) / 10, sharp, real, m, bImg: bImg && bImg / 10, spot };
+      state = { g: g / 10, b: (XS - LX) / 10, sharp, real, m, bImg: bImg && bImg / 10, spot, construct };
       opts.onChange && opts.onChange(state);
     }
-    let drag = null;
     st.pointer({
-      down: (p) => {
-        if (Math.abs(p.x - (LX - g)) < 30 && p.y > AX - 90 && p.y < AX + 20) drag = 'g';
-        else if (Math.abs(p.x - XS) < 30) drag = 's';
-        else return false;
-      },
-      move: (p) => {
+      move: (p, e, drag) => {
         if (drag === 'g') { g = clamp(Math.round(LX - p.x), 30, 380); slG.set(g / 10, false); }
         if (drag === 's') { XS = clamp(Math.round(p.x), LX + 30, LX + 370); slS.set((XS - LX) / 10, false); }
         render();
@@ -455,6 +451,7 @@
       gObj.innerHTML = ''; gCon.innerHTML = ''; st.gRay.innerHTML = '';
       const tip = { x: LX - g, y: AX - H };
       arrowObj(gObj, tip.x, AX, H, 'ant');
+      s('rect', { x: tip.x - 26, y: AX - H - 22, width: 52, height: H + 44, rx: 10, class: 'drag-handle hit grip', 'data-h': 'g' }, gObj);
       label(gObj, tip.x, AX + 22, 'Ameise', 'lbl-small', 'middle');
       const lens = { type: 'lens', x: LX, f, a: A };
       const dirs = [{ x: 1, y: 0 }, V.sub({ x: LX, y: AX }, tip)];
@@ -485,7 +482,6 @@
       opts.onChange && opts.onChange(state);
     }
     st.pointer({
-      down: (p) => { if (Math.abs(p.x - (LX - g)) > 40) return false; },
       move: (p) => { g = clamp(Math.round(LX - p.x), 30, 300); sl.set(g / 10, false); render(); },
     });
     render();

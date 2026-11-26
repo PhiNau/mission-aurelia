@@ -53,19 +53,34 @@
       const r = p.matrixTransform(this.svg.getScreenCTM().inverse());
       return { x: r.x, y: r.y };
     }
+    /* Ziehen nur an Griffen (.drag-handle). Tippen/Wischen anderswo scrollt die Seite.
+       Bewegungen werden pro Bildschirm-Frame gebündelt, damit es flüssig bleibt. */
     pointer(handler) {
       const svg = this.svg;
-      let active = false;
+      let active = null, pending = null, frame = false;
+      svg.addEventListener('touchstart', (e) => { if (e.target.closest && e.target.closest('.drag-handle')) e.preventDefault(); }, { passive: false });
       svg.addEventListener('pointerdown', (e) => {
+        const hd = e.target.closest && e.target.closest('.drag-handle');
+        if (!hd) return;
         const p = this.pt(e);
-        if (handler.down && handler.down(p, e) === false) return;
-        active = true;
+        if (handler.down && handler.down(p, e, hd.dataset.h) === false) return;
+        active = hd.dataset.h || 'drag';
+        this.svg.classList.add('dragging');
         try { svg.setPointerCapture(e.pointerId); } catch (_) { /* ignore */ }
         e.preventDefault();
-        if (handler.move) handler.move(p, e);
       });
-      svg.addEventListener('pointermove', (e) => { if (active && handler.move) handler.move(this.pt(e), e); });
-      const stop = () => { if (active) { active = false; if (handler.up) handler.up(); } };
+      svg.addEventListener('pointermove', (e) => {
+        if (!active || !handler.move) return;
+        pending = this.pt(e);
+        if (!frame) { frame = true; UI.nextFrame(() => { frame = false; if (pending && active) handler.move(pending, null, active); pending = null; }); }
+      });
+      const stop = () => {
+        if (!active) return;
+        if (pending && handler.move) handler.move(pending, null, active);
+        pending = null; active = null;
+        this.svg.classList.remove('dragging');
+        if (handler.up) handler.up();
+      };
       svg.addEventListener('pointerup', stop);
       svg.addEventListener('pointercancel', stop);
     }
@@ -74,14 +89,16 @@
   /* ---------- Zeichenhelfer ---------- */
   function drawSegs(stage, parent, segs, o) {
     o = o || {};
-    const glow = s('g', { filter: stage.url('glow'), class: 'ray-glow' + (o.cls ? ' ' + o.cls : '') }, parent);
+    // Leuchten ohne SVG-Weichzeichner (der kostet auf Tablets viel Rechenzeit): breite, halbtransparente Linie
+    const glow = s('g', { class: 'ray-glow' + (o.cls ? ' ' + o.cls : '') }, parent);
     const core = s('g', { class: 'ray-core' + (o.cls ? ' ' + o.cls : '') }, parent);
     for (const sg of segs) {
       let a = sg.a, b = sg.b;
       if (o.clip) { const c = o.clip(a, b); if (!c) continue; a = c[0]; b = c[1]; }
       const I = sg.I == null ? 1 : sg.I;
       if (I < 0.02) continue;
-      s('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'stroke-width': 9, 'stroke-opacity': (0.6 * Math.min(1, I * 1.3)).toFixed(3) }, glow);
+      s('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'stroke-width': 10, 'stroke-opacity': (0.22 * Math.min(1, I * 1.3)).toFixed(3) }, glow);
+      s('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'stroke-width': 5, 'stroke-opacity': (0.45 * Math.min(1, I * 1.3)).toFixed(3) }, glow);
       s('line', { x1: a.x, y1: a.y, x2: b.x, y2: b.y, 'stroke-width': o.width || 2.4, 'stroke-opacity': Math.max(0.22, Math.min(1, I * 1.2)).toFixed(3) }, core);
       if (o.arrows !== false && I > 0.25 && (sg.main || o.allArrows)) {
         const L = V.dist(a, b);
@@ -122,6 +139,18 @@
     s('circle', { cx: -53, cy: 0, r: 3.8, class: 'laser-led' }, g);
     s('rect', { x: -44, y: -8, width: 28, height: 3, rx: 1.5, fill: 'rgba(255,255,255,.22)' }, g);
     return g;
+  }
+
+  /* Drehgriff (gelber Ring) und unsichtbare Griff-Flächen */
+  function knob(parent, p, name) {
+    const g = s('g', { class: 'drag-handle knob', 'data-h': name || 'aim', transform: `translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})` }, parent);
+    s('circle', { r: 30, class: 'hit' }, g);
+    s('circle', { r: 15, class: 'knob-ring' }, g);
+    s('path', { d: 'M-7 -3 A8 8 0 0 1 7 -3 M7 -3 l-4 -1 M7 -3 l1 -4 M7 3 A8 8 0 0 1 -7 3 M-7 3 l4 1 M-7 3 l-1 4', class: 'knob-icon' }, g);
+    return g;
+  }
+  function grip(parent, x, y, w, hgt, name) {
+    return s('rect', { x, y, width: w, height: hgt, rx: 10, class: 'drag-handle hit grip', 'data-h': name }, parent);
   }
 
   function arcPath(c, r, a1, a2) {
@@ -197,15 +226,19 @@
       s('line', { x1: L.x, y1: L.y, x2: far.x, y2: far.y, class: 'aim-line' }, gAim);
       gLaser.innerHTML = '';
       drawLaser(gLaser, L, ang);
+      knob(gLaser, V.add(L, V.mul(dir, 125)));
       // nur der erste Weg im Glas zählt (keine Treffer über Spiegelungen)
       const first = tr.segments.find((sg) => sg.main && sg.n > 1.01);
       hit = !!first && O.distPointSeg(T, first.a, first.b) < 17;
       cr.classList.toggle('hit', hit);
       info.innerHTML = hit
         ? '<b class="ok">Treffer!</b> Vergleicht die gestrichelte Ziellinie mit dem echten Strahl.'
-        : 'Gelb gestrichelt: dorthin zielt der Laser. <span class="dim">Rot: der echte Lichtweg. Weiß gestrichelt: das Lot.</span>';
+        : 'Dreht den Laser am <b>gelben Griff</b>. Gelb gestrichelt: dorthin zielt der Laser. <span class="dim">Rot: der echte Lichtweg. Weiß gestrichelt: das Lot.</span>';
       if (hit && !reported) { reported = true; opts.onHit && opts.onHit(shots); }
+      tstate = { ang, hit, inDeg: tr.events[0] ? tr.events[0].inDeg : null };
+      opts.onChange && opts.onChange(tstate);
     }
+    let tstate = {};
     st.pointer({
       move: (p) => {
         let a = V.angle(V.sub(p, L));
@@ -217,7 +250,7 @@
       up: () => { shots++; },
     });
     render();
-    return { stage: st };
+    return { stage: st, get state() { return tstate; } };
   }
 
   /* =========================================================
@@ -343,6 +376,12 @@
 
       gLaser.innerHTML = '';
       drawLaser(gLaser, P, V.angle(dir));
+      if (!opts.static && !predictMode) {
+        const bc = V.sub(P, V.mul(V.norm(dir), 34));
+        const hg = s('g', { class: 'drag-handle', 'data-h': 'laser' }, gLaser);
+        s('circle', { cx: bc.x, cy: bc.y, r: 40, class: 'hit' }, hg);
+        s('circle', { cx: bc.x, cy: bc.y, r: 36, class: 'knob-ring faint' }, hg);
+      }
 
       // Lupe
       gLupe.style.display = lupeOn ? '' : 'none';
@@ -431,8 +470,8 @@
 
     function setup() {
       if (shape === 'block') {
-        L = { x: 90, y: 70 }; ang = 32; body = O.rect(250, 200, 330, 130, 1.5);
-        sl.input.min = 5; sl.input.max = 70;
+        L = { x: 220, y: 70 }; ang = 40; body = O.rect(250, 200, 330, 130, 1.5);
+        sl.input.min = 10; sl.input.max = 78;
       } else {
         const cx = 430, cy = 255, side = 290, hgt = side * Math.sqrt(3) / 2;
         const sg = flip ? -1 : 1;
@@ -486,9 +525,10 @@
       }
       gLaser.innerHTML = '';
       drawLaser(gLaser, L, ang);
+      if (!predictMode) knob(gLaser, V.add(L, V.mul(dir, 120)));
       let dev = null;
       if (tr.end && ev.length >= 2) dev = V.angle(tr.end.d) - ang;
-      state = { ang, dev, hits: ev.length, tir: ev.some((e) => e.tir) };
+      state = { ang, dev, hits: ev.length, tir: ev.some((e) => e.tir), inDeg: ev[0] ? ev[0].inDeg : null, flip, shape };
       if (predictMode) read.innerHTML = 'Wählt eure Vermutung: <b>A</b>, <b>B</b> oder <b>C</b>.';
       else if (shape === 'block') read.innerHTML = '<span class="legend-ext"></span> ursprüngliche Richtung des Lasers · <span class="legend-lot"></span> Lote';
       else read.innerHTML = '<span class="legend-ext"></span> ursprüngliche Richtung · <span class="legend-lot"></span> Lote' + (state.tir ? ' · <span class="pill pill-warn">Totalreflexion im Prisma</span>' : '');
@@ -709,6 +749,11 @@
       }
       gLaser.innerHTML = '';
       drawLaser(gLaser, P, ang);
+      const bc = V.sub(P, V.mul(d, 36));
+      const hg = s('g', { class: 'drag-handle', 'data-h': 'move' }, gLaser);
+      s('circle', { cx: bc.x, cy: bc.y, r: 36, class: 'hit' }, hg);
+      s('path', { d: `M${bc.x} ${bc.y - 30} l-6 8 h12 Z M${bc.x} ${bc.y + 30} l-6 -8 h12 Z`, class: 'knob-icon fill' }, hg);
+      knob(gLaser, V.add(P, V.mul(d, 95)));
       const inDeg = -ang;
       const outDeg = -V.angle(out);
       state = { inDeg, outDeg, yLens: AX - q.y, yLaser: AX - y, hitsLens: hits, mode, q };
@@ -717,12 +762,8 @@
       opts.onChange && opts.onChange(state);
     }
 
-    let dragMode = null;
     st.pointer({
-      down: (p) => {
-        dragMode = (Math.abs(p.x - X0 + 30) < 50 && Math.abs(p.y - y) < 30) ? 'move' : 'aim';
-      },
-      move: (p) => {
+      move: (p, e, dragMode) => {
         if (dragMode === 'move') {
           y = Math.round(Math.max(AX - 150, Math.min(AX + 150, p.y)));
           slY.set(AX - y, false);
@@ -900,6 +941,7 @@
         angleArc(gDyn, P, 120, 0, aOut, 'arc-x', '4');
         return;
       }
+      opts.onChange && opts.onChange({ alpha, beta });
       angleArc(gDyn, P, 70, -90, aIn, 'arc-alpha', opts.mode === 'explain' ? 'α' : '');
       angleArc(gDyn, P, 85, 90, aOut, 'arc-beta', opts.mode === 'explain' ? 'β' : '');
       const mIn = V.mul(V.add(A0, P), 0.5), mOut = V.mul(V.add(P, B0), 0.5);

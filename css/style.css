@@ -45,7 +45,7 @@ button { font: inherit; }
 .topbar {
   position: sticky; top: 0; z-index: 20;
   display: flex; align-items: center; gap: 1rem; justify-content: space-between;
-  padding: .55rem 1.2rem; background: rgba(8, 13, 30, .92); backdrop-filter: blur(8px);
+  padding: .55rem 1.2rem; background: #080d1e;
   border-bottom: 1px solid rgba(255, 255, 255, .08); color: #e8ecff;
 }
 .brand { display: flex; align-items: center; gap: .6rem; text-decoration: none; }
@@ -125,7 +125,7 @@ main { flex: 1; width: 100%; max-width: 1060px; margin: 0 auto; padding: 1.2rem 
 .station-head h1 { margin: .1rem 0 .6rem; font-size: clamp(1.5rem, 3.5vw, 2.1rem); }
 .stepper { display: flex; gap: .4rem; flex-wrap: wrap; }
 .dot { width: 34px; height: 10px; border-radius: 99px; border: 0; cursor: pointer; background: #33417a; padding: 0; }
-.dot.k-story { background: #6c5ce7; } .dot.k-info { background: #2bb3e6; } .dot.k-exp { background: #ff6b6b; } .dot.k-task { background: #f5b400; }
+.dot.k-story { background: #6c5ce7; } .dot.k-learn { background: #12c4a6; } .dot.k-info { background: #2bb3e6; } .dot.k-exp { background: #ff6b6b; } .dot.k-task { background: #f5b400; }
 .dot { opacity: .45; }
 .dot.seen { opacity: .8; }
 .dot.cur { opacity: 1; height: 14px; margin-top: -2px; box-shadow: 0 0 0 2px #fff; }
@@ -134,7 +134,7 @@ main { flex: 1; width: 100%; max-width: 1060px; margin: 0 auto; padding: 1.2rem 
 .step-head { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; margin-bottom: .6rem; }
 .step-head h2 { margin: 0; font-size: 1.35rem; }
 .kind-badge { display: inline-block; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: .2rem .6rem; border-radius: 99px; color: #fff; }
-.k-story { background: #6c5ce7; } .k-info { background: #1f95c4; } .k-exp { background: #e0484b; } .k-task { background: #d99a00; }
+.k-story { background: #6c5ce7; } .k-learn { background: #0e9e86; } .k-info { background: #1f95c4; } .k-exp { background: #e0484b; } .k-task { background: #d99a00; }
 .step-nav { position: sticky; bottom: 0; z-index: 10; display: flex; align-items: center; gap: 1rem; justify-content: space-between; margin-top: 1rem; padding: .7rem 0; background: linear-gradient(transparent, var(--night) 35%); color: #e8ecff; }
 .step-nav .btn-ghost { color: #e8ecff; }
 .nav-hint { font-size: .85rem; color: #ffd98a; text-align: center; flex: 1; }
@@ -199,7 +199,17 @@ main { flex: 1; width: 100%; max-width: 1060px; margin: 0 auto; padding: 1.2rem 
   .step-body.split > .sim-block .stage-wrap { margin-top: 0; }
 }
 .stage { display: block; width: 100%; height: auto; user-select: none; -webkit-user-select: none; }
-.stage.interactive { touch-action: none; cursor: crosshair; }
+.stage.interactive { cursor: default; }
+.drag-handle { cursor: grab; touch-action: none; }
+.stage.dragging, .stage.dragging .drag-handle { cursor: grabbing; }
+.hit { fill: transparent; pointer-events: all; }
+.grip:hover { fill: rgba(255, 211, 77, .08); }
+.knob-ring { fill: rgba(255, 211, 77, .22); stroke: #ffd34d; stroke-width: 2.5; }
+.knob-ring.faint { fill: none; stroke-dasharray: 5 5; opacity: .6; }
+.knob-icon { fill: none; stroke: #ffd34d; stroke-width: 2; stroke-linecap: round; }
+.knob-icon.fill { fill: #ffd34d; stroke: none; opacity: .8; }
+.knob:hover .knob-ring, .dragging .knob-ring { fill: rgba(255, 211, 77, .4); }
+button, a, select, input { touch-action: manipulation; }
 .stage-bg { fill: #0b1226; }
 .stage text { font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
 .body { stroke-width: 2; }
@@ -221,7 +231,7 @@ main { flex: 1; width: 100%; max-width: 1060px; margin: 0 auto; padding: 1.2rem 
 .laser-body { fill: #3b4466; stroke: #a9b4d8; stroke-width: 1.5; }
 .laser-nozzle { fill: #9aa6cc; }
 .laser-led { fill: #ff4d4d; }
-.laser { filter: drop-shadow(0 2px 3px rgba(0, 0, 0, .5)); }
+
 .aim-line { stroke: #ffd98a; stroke-width: 1.6; stroke-dasharray: 6 6; opacity: .75; }
 .ext-line { stroke: #ffd98a; stroke-width: 1.6; stroke-dasharray: 6 6; opacity: .7; }
 .back-ext { stroke: #ff9b9b; stroke-width: 1.4; stroke-dasharray: 5 6; opacity: .8; }
@@ -455,12 +465,12 @@ select.wrong, input.wrong { border-color: var(--no) !important; background: var(
 .obj-head.img-virtual { fill: none; stroke: #7bed9f; stroke-width: 2; }
 .candle-body { fill: #f3e3c3; stroke: #c9b48a; }
 .candle-wick { stroke: #333; stroke-width: 2; }
-.candle-flame { fill: #ffb000; filter: drop-shadow(0 0 6px #ffcf6b); }
+.candle-flame { fill: #ffb000; }
 .con-ray { stroke-width: 2; fill: none; }
 .con-ray.c0 { stroke: #ffd34d; } .con-ray.c1 { stroke: #7bed9f; } .con-ray.c2 { stroke: #4fd1ff; }
 .con-ray.dashed { stroke-dasharray: 6 5; opacity: .8; }
 .screen { fill: #e9ecf8; stroke: #9aa6cc; }
-.screen-spot { stroke: #ffcf6b; stroke-width: 5; stroke-linecap: round; filter: drop-shadow(0 0 4px #ffcf6b); }
+.screen-spot { stroke: #ffcf6b; stroke-width: 5; stroke-linecap: round; }
 .dim-line.alt { stroke: #9fb0e0; }
 .inset-bg { fill: #050a1c; }
 .inset-bg.retina { fill: #3a1420; }
@@ -491,3 +501,17 @@ select.wrong, input.wrong { border-color: var(--no) !important; background: var(
 .ray-core.alt line { stroke: #cfe3ff; }
 .ray-core.alt .ray-arrow { fill: #e6f0ff; }
 .mission-slot:empty { display: none; }
+
+/* Lernabschnitte */
+.box-learn { background: #e3f7f2; border-color: #0e9e86; }
+.explore-prog { font-size: .92rem; color: var(--ink-2); margin-bottom: .4rem; }
+.explore-prog.complete { color: var(--ok); }
+.explore { list-style: none; padding: 0; margin: 0; display: grid; gap: .45rem; }
+.explore-item { display: flex; gap: .6rem; align-items: flex-start; background: var(--paper); border: 2px solid var(--line); border-radius: 12px; padding: .55rem .7rem; }
+.explore-item.found { border-color: #9fdcc9; background: #f1fbf7; }
+.ex-icon { flex: none; width: 28px; height: 28px; border-radius: 50%; display: grid; place-items: center; font-weight: 800; background: #e9ecf8; color: var(--ink-2); font-size: .9rem; }
+.explore-item.found .ex-icon { background: var(--ok); color: #fff; }
+.ex-body { flex: 1; min-width: 0; }
+.ex-fb { display: none; margin-top: .35rem; color: #0b5e50; font-size: .95rem; }
+.explore-item.found .ex-fb { display: block; animation: fadeUp .3s both; }
+.btn-small { min-height: 36px; padding: .3rem .8rem; font-size: .88rem; margin-top: .4rem; background: #e3f7f2; color: #0b5e50; border: 2px solid #9fdcc9; }

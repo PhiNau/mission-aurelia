@@ -142,6 +142,7 @@
         el.append(P(`<p>Jede Station besteht aus mehreren Schritten. Ihr erkennt sie an diesen Zeichen:</p>`));
         el.append(h('div', { class: 'legend-grid', html: `
           <div><span class="kind-badge k-story">Geschichte</span><p>Was in der Sternwarte passiert.</p></div>
+          <div><span class="kind-badge k-learn">Lernabschnitt</span><p>Ihr erkundet ein Phänomen selbst und erarbeitet das Wissen.</p></div>
           <div><span class="kind-badge k-info">Wissen</span><p>Neue Begriffe und Erklärungen.</p></div>
           <div><span class="kind-badge k-exp">Experiment</span><p>Ihr probiert selbst aus – mit Laser und Glas.</p></div>
           <div><span class="kind-badge k-task">Aufgabe</span><p>Erst wenn sie gelöst ist, geht es weiter.</p></div>` }));
@@ -163,8 +164,21 @@
           { who: 'lumi', text: 'Ein Kristall! Den brauche ich! Wenn ihr ihn mit dem Laserstrahl trefft, kann ich seine Energie aufnehmen.' },
         ]));
       } },
+      { kind: 'learn', title: 'Erkunden: Licht trifft auf Glas', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Bevor ihr den Kristall sucht, untersucht ihr, was mit Licht an einem Glasblock passiert. Dreht den Laser am <b>gelben Griff</b> oder mit dem Regler.</p>',
+          sim: (e, cb) => Sims.bench(e, { shape: 'block', onChange: cb }),
+          items: [
+            { t: 'Lasst den Strahl <b>möglichst steil</b> (fast senkrecht) auf die Oberseite des Glases treffen.', check: (st) => st.inDeg != null && st.inDeg < 25, fb: 'Trifft das Licht fast senkrecht auf, knickt es kaum ab.' },
+            { t: 'Lasst den Strahl <b>sehr flach</b> auf das Glas treffen.', check: (st) => st.inDeg != null && st.inDeg > 60, fb: 'Je schräger das Licht auftrifft, desto stärker knickt es an der Oberfläche ab.' },
+            { t: 'Schaut genau hin: <b>Wo</b> ändert der Strahl seine Richtung? Ist er im Glas gerade oder krumm?', fb: 'Der Knick passiert nur an der Oberfläche. Im Glas und in der Luft läuft das Licht geradeaus.' },
+            { t: 'Vergleicht den Strahl <b>unter</b> dem Glasblock mit der gestrichelten Linie.', fb: 'Unten knickt das Licht noch einmal ab und läuft danach in der alten Richtung weiter – nur seitlich verschoben.' },
+          ],
+          summary: 'Licht ändert seine Richtung nur an der <b>Grenzfläche</b> zwischen Luft und Glas – und zwar umso stärker, je schräger es auftrifft. Diesen Vorgang nennt man <b>Brechung</b>. Senkrecht auftreffendes Licht geht ohne Knick hindurch.',
+        });
+      } },
       { kind: 'exp', title: 'Trefft den Kristall!', gate: true, render(el, api) {
-        el.append(P('<p><b>Auftrag:</b> Richtet den Laser so aus, dass der Strahl den Kristall im Glasblock trifft. Zieht dazu auf der Fläche (oder benutzt den Regler). Die <b>gestrichelte Linie</b> zeigt, wohin der Laser zielt.</p><p class="dim">Tipp: Zielt zuerst ganz direkt auf den Kristall. Was passiert?</p>'));
+        el.append(P('<p><b>Auftrag:</b> Richtet den Laser so aus, dass der Strahl den Kristall im Glasblock trifft. Dreht ihn dazu am <b>gelben Griff</b> (oder benutzt den Regler). Die <b>gestrichelte Linie</b> zeigt, wohin der Laser zielt.</p><p class="dim">Tipp: Zielt zuerst ganz direkt auf den Kristall. Was passiert?</p>'));
         const fb = h('div', { class: 'fb-slot' });
         Sims.target(el, { onHit: () => {
           fb.innerHTML = '';
@@ -213,14 +227,20 @@
           { who: 'prof', text: 'Der wichtigste Begriff ist eine gedachte Hilfslinie: das <b>Einfallslot</b>.' },
         ]));
       } },
-      { kind: 'info', title: 'Lot, Einfallswinkel, Brechungswinkel', render(el) {
-        Sims.diagram(el, { alpha: 50, mode: 'explain', slider: true });
-        el.append(P(`<ul>
-          <li>Das <b>Einfallslot</b> (kurz: <b>Lot</b>) ist eine gedachte Linie. Sie steht im Auftreffpunkt <b>senkrecht</b> (im 90°-Winkel) auf der Grenzfläche.</li>
-          <li>Der <b>Einfallswinkel α</b> (sprich: alpha) liegt zwischen dem <b>einfallenden Strahl</b> und dem Lot.</li>
-          <li>Der <b>Brechungswinkel β</b> (sprich: beta) liegt zwischen dem <b>gebrochenen Strahl</b> und dem Lot.</li></ul>`));
-        el.append(box('warn', 'Achtung, häufiger Fehler!', 'Winkel werden in der Optik <b>immer zum Lot</b> gemessen – <b>nie</b> zur Grenzfläche.'));
-        el.append(P('<p class="dim">Probiert den Regler aus: Wie verändern sich α und β?</p>'));
+      { kind: 'learn', title: 'Lot, Einfallswinkel, Brechungswinkel', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: `<ul>
+            <li>Das <b>Einfallslot</b> (kurz: <b>Lot</b>) ist eine gedachte Linie. Sie steht im Auftreffpunkt <b>senkrecht</b> (im 90°-Winkel) auf der Grenzfläche.</li>
+            <li>Der <b>Einfallswinkel α</b> (sprich: alpha) liegt zwischen dem <b>einfallenden Strahl</b> und dem Lot.</li>
+            <li>Der <b>Brechungswinkel β</b> (sprich: beta) liegt zwischen dem <b>gebrochenen Strahl</b> und dem Lot.</li></ul>`,
+          sim: (e, cb) => Sims.diagram(e, { alpha: 50, mode: 'explain', slider: true, onChange: cb }),
+          items: [
+            { t: 'Stellt <b>α = 0°</b> ein.', check: (st) => st.alpha === 0, fb: 'Das Licht fällt genau entlang des Lots ein: α und β sind beide 0° – kein Knick.' },
+            { t: 'Stellt einen <b>sehr großen</b> Einfallswinkel ein (über 75°). Wie groß wird β?', check: (st) => st.alpha > 75, fb: 'β bleibt viel kleiner als α – höchstens etwa 42°. Im Glas liegt der Strahl immer näher am Lot.' },
+            { t: 'Zeigt euch gegenseitig am Bildschirm: Zwischen welchen Linien liegt α, zwischen welchen β?', fb: 'α liegt zwischen einfallendem Strahl und Lot, β zwischen gebrochenem Strahl und Lot.' },
+          ],
+          summary: 'Winkel werden in der Optik <b>immer zum Lot</b> gemessen – <b>nie</b> zur Grenzfläche. Beim Übergang von Luft in Glas ist β kleiner als α.',
+        });
       } },
       { kind: 'task', title: 'Beschriftet die Skizze', gate: true, render(el, api) {
         T.labeling(el, {
@@ -270,6 +290,19 @@
           { who: 'lumi', text: 'Der Laser zielt immer genau auf den Mittelpunkt der geraden Glasseite. Den <b>Einfallswinkel α</b> stellt ihr ein. Den <b>Brechungswinkel β</b> lest ihr an der Skala ab.' },
           { who: 'prof', text: 'Kleiner Trick: Auf der <b>runden</b> Seite trifft das Licht genau senkrecht auf. Dort wird es nicht noch einmal gebrochen. Darum könnt ihr β ganz bequem außen an der Skala ablesen.' },
         ]));
+      } },
+      { kind: 'learn', title: 'Erkunden: Die optische Scheibe', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Macht euch mit der optischen Scheibe vertraut. Dreht den Laser, indem ihr ihn am <b>gestrichelten Ring</b> zieht, oder mit dem Regler.</p>',
+          sim: (e, cb) => Sims.disc(e, { mode: 'in', alpha: 30, lupe: false, onChange: cb }),
+          items: [
+            { t: 'Stellt <b>α = 0°</b> ein.', check: (st) => st.alpha === 0, fb: 'Senkrecht einfallendes Licht geht ohne Knick ins Glas.' },
+            { t: 'Stellt etwa <b>α = 45°</b> ein. Liegt der Strahl im Glas näher am Lot oder weiter weg?', check: (st) => st.alpha >= 40 && st.alpha <= 50, fb: 'Näher am Lot: Das Licht wird <b>zum Lot hin</b> gebrochen (β < α).' },
+            { t: 'Dreht den Laser ganz weit – über <b>80°</b>.', check: (st) => st.alpha > 80, fb: 'Selbst bei fast 90° bleibt der Strahl im Glas unter etwa 42°.' },
+            { t: 'Sucht den <b>schwachen Strahl</b>, der an der Glasoberfläche zurückgeworfen wird.', fb: 'Ein kleiner Teil des Lichts wird immer reflektiert – so wie an einem Spiegel.' },
+          ],
+          summary: 'Beim Übergang von Luft in Glas wird Licht <b>zum Lot hin</b> gebrochen. Je größer α, desto größer auch β – aber β ist immer kleiner. Wie groß β genau ist, messt ihr jetzt.',
+        });
       } },
       { kind: 'exp', title: 'Messreihe aufnehmen', gate: true, render(el, api) {
         el.append(P('<p><b>Auftrag:</b> Stellt nacheinander die Einfallswinkel aus der Tabelle ein. Lest jeweils den Brechungswinkel β an der Skala ab und tragt ihn ein (auf ganze Grad gerundet).</p><p class="dim">Tipp: Schaltet die <b>Lupe</b> ein – dann könnt ihr genauer ablesen. Die Skala zählt von 0° am Lot bis 90° an der Grenzfläche.</p>'));
@@ -340,6 +373,19 @@
           fbRight: 'Beim Austritt in die Luft wird das Licht <b>vom Lot weg</b> gebrochen.',
           fbWrong: () => 'Seht ihr? Der Strahl wird <b>vom Lot weg</b> gebrochen – genau andersherum als beim Eintritt ins Glas.' });
       } },
+      { kind: 'learn', title: 'Erkunden: Licht verlässt das Glas', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Jetzt läuft das Licht im Glas und tritt oben in die Luft aus. β wird direkt angezeigt.</p>',
+          sim: (e, cb) => Sims.disc(e, { mode: 'out', alpha: 10, lupe: false, showBeta: true, onChange: cb }),
+          items: [
+            { t: 'Stellt etwa <b>α = 20°</b> ein und vergleicht α und β.', check: (st) => st.alpha >= 18 && st.alpha <= 22, fb: 'β ist größer als α: Beim Austritt wird das Licht <b>vom Lot weg</b> gebrochen.' },
+            { t: 'Dreht langsam weiter, bis der Strahl in der Luft <b>fast an der Glasoberfläche entlangläuft</b>.', check: (st) => st.beta != null && st.beta > 70 && !st.tir, fb: 'Bei etwa 40° ist β schon fast 90°.' },
+            { t: 'Dreht noch ein kleines Stück weiter.', check: (st) => st.tir, fb: 'Jetzt kommt gar kein Licht mehr heraus – es wird vollständig zurückgeworfen: <b>Totalreflexion</b>.' },
+            { t: 'Beobachtet den zurückgeworfenen Strahl im Glas, während ihr hin- und herdreht. Wann wird er hell?', fb: 'Je näher ihr an etwa 42° kommt, desto mehr Licht wird reflektiert – darüber alles.' },
+          ],
+          summary: 'Glas → Luft: Das Licht wird <b>vom Lot weg</b> gebrochen. Ab einem Grenzwinkel von etwa <b>42°</b> tritt kein Licht mehr aus: <b>Totalreflexion</b>.',
+        });
+      } },
       { kind: 'task', title: 'Der Lichtweg ist umkehrbar', gate: true, render(el, api) {
         const m = api.get('messung');
         const b40 = m && !isNaN(m[2]) ? Math.round(m[2]) : 25;
@@ -402,6 +448,18 @@
           { t: 'In eine ganz neue Richtung', fb: 'Vergleicht die Richtung mit der gestrichelten Linie: Sind die Linien parallel?' },
         ] });
       } },
+      { kind: 'learn', title: 'Erkunden: Licht im Prisma', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Ein Prisma ist ein Glaskörper mit dreieckiger Grundfläche. Seine beiden Flächen sind <b>nicht parallel</b>. Dreht den Laser am gelben Griff.</p>',
+          sim: (e, cb) => Sims.bench(e, { shape: 'prism', allowFlip: true, onChange: cb }),
+          items: [
+            { t: 'Verfolgt den Strahl durch das Prisma und vergleicht ihn mit der gestrichelten Linie.', fb: 'Das Licht knickt zweimal ab – und beide Male in dieselbe Richtung.' },
+            { t: 'Dreht den Laser deutlich nach oben oder unten.', check: (st) => st.shape === 'prism' && Math.abs(st.ang - (st.flip ? 8 : -8)) >= 12, fb: 'Die Stärke der Ablenkung ändert sich – die Richtung aber nicht.' },
+            { t: 'Dreht das <b>Prisma um</b>.', check: (st) => st.flip, fb: 'Jetzt liegt die dicke Seite oben – und das Licht wird nach oben abgelenkt.' },
+          ],
+          summary: 'Ein Prisma lenkt Licht immer <b>zur dicken Seite (Basis)</b> hin ab – egal, wie es liegt.',
+        });
+      } },
       { kind: 'task', title: 'Vermutung: das Prisma', gate: true, render(el, api) {
         el.append(P('<p>Beim Prisma sind die beiden Flächen <b>nicht parallel</b>. Wie läuft das Licht hinter dem Prisma weiter? Entscheidet euch – dann wird der Strahl sichtbar.</p>'));
         const sim = Sims.bench(el, { shape: 'prism' });
@@ -440,6 +498,19 @@
           { who: 'lumi', text: 'In die Mitte lege ich einen Quader. <b>Oben</b> ein Prisma mit der Spitze nach oben, <b>unten</b> eins mit der Spitze nach unten. So zeigen alle dicken Seiten zur Mitte!' },
           { who: 'prof', text: 'Genial, LUMI! Genau so kann man sich eine Linse vorstellen. Probieren wir es mit parallelem Licht aus.' },
         ]));
+      } },
+      { kind: 'learn', title: 'Erkunden: Vom Prisma zur Linse', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Parallele Lichtstrahlen fallen von links ein. Wechselt zwischen den Glaskörpern und verändert die Wölbung.</p>',
+          sim: (e, cb) => Sims.lensBench(e, { kind: 'prisms', kinds: ['prisms', 'convex', 'concave'], R: 320, curvature: true, onChange: cb }),
+          items: [
+            { t: 'Schaut euch den <b>Prismenstapel</b> an: Wohin lenkt jedes Stück das Licht?', check: (st) => st.kind === 'prisms', fb: 'Jedes Stück lenkt zu seiner dicken Seite – und die zeigt immer zur Mitte.' },
+            { t: 'Schaltet auf <b>Sammellinse</b>. Wo treffen sich die Strahlen?', check: (st) => st.kind === 'convex', fb: 'Fast genau in einem Punkt hinter der Linse: dem <b>Brennpunkt F</b>.' },
+            { t: 'Macht die Sammellinse <b>stärker gewölbt</b>.', check: (st) => st.kind === 'convex' && st.R < 210, fb: 'Der Brennpunkt rückt näher an die Linse: Die <b>Brennweite</b> wird kürzer.' },
+            { t: 'Schaltet auf <b>Zerstreuungslinse</b>.', check: (st) => st.kind === 'concave', fb: 'Die Strahlen laufen auseinander – als kämen sie von einem Punkt vor der Linse.' },
+          ],
+          summary: 'Eine <b>Sammellinse</b> (in der Mitte dick) wirkt wie ein Prismenstapel und sammelt paralleles Licht im <b>Brennpunkt F</b>. Je stärker gewölbt, desto kürzer die <b>Brennweite f</b>. Eine <b>Zerstreuungslinse</b> (in der Mitte dünn) lässt Licht auseinanderlaufen.',
+        });
       } },
       { kind: 'exp', title: 'Der Prismenstapel', gate: true, render(el, api) {
         Sims.lensBench(el, { kind: 'prisms', R: 200, showF: false });
@@ -524,15 +595,23 @@
     id: 's7', nr: 7, title: 'Drei besondere Strahlen', short: 'Strahlen', color: '#b47cff',
     merksatz: 'Für Zeichnungen tut man so, als würde das Licht nur <b>einmal an der Mittelebene</b> der Linse abknicken. Drei Strahlen kann man ohne Messen zeichnen:<br>• <b>Parallelstrahl</b> → wird zum <b>Brennpunktstrahl</b> (läuft durch F).<br>• <b>Mittelpunktstrahl</b> → läuft <b>ungeknickt</b> weiter.<br>• <b>Brennpunktstrahl</b> → wird zum <b>Parallelstrahl</b>.',
     steps: [
-      { kind: 'info', title: 'Ein Trick für Zeichnungen', render(el) {
+      { kind: 'learn', title: 'Ein Trick für Zeichnungen', gate: true, render(el, api) {
         el.append(D([
           { who: 'prof', text: 'Optikerinnen und Optiker zeichnen Linsen meist vereinfacht: Sie tun so, als würde das Licht nur <b>einmal</b> abknicken – an der <b>Mittelebene</b> der Linse.' },
           { who: 'lumi', text: 'Aber das Licht wird doch zweimal gebrochen – vorne und hinten, wie beim Prisma! Ist das nicht geschummelt?' },
-          { who: 'prof', text: 'Ein bisschen. Aber für Strahlen nahe der optischen Achse kommt fast dasselbe heraus. Vergleicht selbst: Schaltet zwischen „Vereinfacht“ und „Echte Linse“ um.' },
+          { who: 'prof', text: 'Ein bisschen. Aber für Strahlen nahe der optischen Achse kommt fast dasselbe heraus. Prüft es selbst!' },
         ]));
-        Sims.thinLens(el, { y: 190, ang: 0 });
-        el.append(P('<p class="dim">Bewegt den Laser: Zieht ihn nach oben oder unten. Zieht irgendwo rechts daneben, um ihn zu drehen. Die beiden Punkte <b>F</b> sind die Brennpunkte – eine Linse hat auf jeder Seite einen.</p>'));
-        el.append(box('info', 'Genau hingeschaut', 'Ganz außen am Rand weicht die echte Linse etwas stärker von der Zeichnung ab. Für Zeichnungen nehmen wir deshalb Strahlen, die nicht zu weit von der Achse entfernt sind.'));
+        let seenReal = false;
+        T.learn(el, api, {
+          intro: '<p class="dim">Zieht den Laser nach oben oder unten. Dreht ihn am <b>gelben Griff</b>. Die beiden Punkte <b>F</b> sind die Brennpunkte – eine Linse hat auf jeder Seite einen.</p>',
+          sim: (e, cb) => Sims.thinLens(e, { y: 190, ang: 0, onChange: cb }),
+          items: [
+            { t: 'Schaltet auf <b>„Echte Linse“</b>. Wie oft knickt der Strahl ab?', check: (st) => st.mode === 'real', fb: 'Zweimal: beim Eintritt und beim Austritt – wie beim Prisma.' },
+            { t: 'Schaltet zurück auf <b>„Vereinfacht“</b> und vergleicht die Richtung hinter der Linse.', check: (st) => { if (st.mode === 'real') seenReal = true; return seenReal && st.mode === 'ideal'; }, fb: 'Hinter der Linse laufen beide Strahlen fast gleich. Für Zeichnungen reicht ein Knick an der Mittelebene.' },
+            { t: 'Schickt den Strahl <b>ganz außen</b> durch die Linse (weit weg von der Achse).', check: (st) => Math.abs(st.yLens) > 70 && st.hitsLens, fb: 'Ganz außen weichen echte Linse und Zeichnung stärker voneinander ab.' },
+          ],
+          summary: 'In Zeichnungen lassen wir das Licht nur <b>einmal an der Mittelebene</b> abknicken. Für Strahlen nicht zu weit von der Achse stimmt das gut mit der echten Linse überein.',
+        });
       } },
       { kind: 'exp', title: 'Mission 1: Der Parallelstrahl', gate: true, render(el, api) {
         mission(el, api, {
@@ -597,6 +676,18 @@
           { who: 'prof', text: 'Heute Nacht kommt Aurelia! Das Licht des Kometen kommt aus riesiger Entfernung. Deshalb treffen seine Strahlen <b>parallel</b> bei uns ein.' },
           { who: 'prof', text: 'Die Linse vorne im Fernrohr muss diese Strahlen genau am anderen Ende des Rohres – im <b>Okular</b> – in einem Punkt sammeln. Sonst sehen wir nur einen verschwommenen Fleck.' },
         ]));
+      } },
+      { kind: 'learn', title: 'Erkunden: Die Linse im Fernrohr', gate: true, render(el, api) {
+        T.learn(el, api, {
+          intro: '<p>Bevor LUMI schleift, probiert ihr verschiedene Linsen aus. Beobachtet, wo sich die Strahlen treffen und wie scharf der Komet im Okular ist.</p>',
+          sim: (e, cb) => Sims.telescope(e, { tube: 420, kind: 'convex', curv: 22, onChange: cb }),
+          items: [
+            { t: 'Probiert die <b>Zerstreuungslinse</b> aus.', check: (st) => st.kind === 'concave', fb: 'Das Licht läuft auseinander – im Okular ist nur ein verschwommener Fleck.' },
+            { t: 'Nehmt eine <b>Sammellinse</b> und macht sie <b>sehr flach</b>.', check: (st) => st.kind === 'convex' && st.f > 480, fb: 'Der Brennpunkt liegt hinter dem Okular – die Strahlen treffen sich zu spät.' },
+            { t: 'Macht die Sammellinse <b>stark gewölbt</b>.', check: (st) => st.kind === 'convex' && st.f < 330, fb: 'Jetzt treffen sich die Strahlen schon im Rohr und laufen danach wieder auseinander – auch unscharf.' },
+          ],
+          summary: 'Ein scharfes Bild entsteht nur, wenn der <b>Brennpunkt genau im Okular</b> liegt.',
+        });
       } },
       { kind: 'task', title: 'Vorüberlegung', gate: true, render(el, api) {
         const need = api.need(2);
